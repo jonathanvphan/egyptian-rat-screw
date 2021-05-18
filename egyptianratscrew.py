@@ -37,7 +37,6 @@ class EgyptianRatScrew:
         self.hands = [[] for players in range(self.players)]
         for index, cards in enumerate(self._game_deck.cards):
             self.hands[index % self.players].append(cards)
-        print(self.hands)
         print(str(len(self.hands[0])) + ', ' + str(len(self.hands[1])) + ', ' + str(len(self.hands[2])))
     
     def play_round(self):
@@ -45,6 +44,7 @@ class EgyptianRatScrew:
         self.card_pile = []
         self.cards_in_play = True
         self.decision = [-1, -1]
+        self.slappable = [0]
         self.collected = 0
         count = 0
         while self.sum_players > 1:
@@ -67,6 +67,7 @@ class EgyptianRatScrew:
         valid = 0
         while valid == 0:
             self.decision = self.get_input()
+            self.update_player_action_text('')
             if self.decision[0] == 0:
                 valid = 1
                 self.card_pile.insert(0, self.hands[self.player_turn][0])
@@ -75,19 +76,26 @@ class EgyptianRatScrew:
                 self.check_cards()
                 self.show_pile_card()
                 self.update_player_card_count_text(self.player_turn)
+                self.update_pile_card_count_text()
                 print(self.card_pile)
                 print(str(len(self.hands[0])) + ', ' + str(len(self.hands[1])) + ', ' + str(len(self.hands[2])))
                 print('Player ' + str(self.player_turn + 1))
-            elif self.decision[0] == 1:
+            elif self.decision[0] == 1 and self.slappable[0] == 1:
                 valid = 1
+                self.slap_pile(self.decision[1])
+            elif self.decision[0] == 1 and self.slappable[0] != 1:
+                valid = 0
                 self.slap_pile(self.decision[1])
 
     def collect_pile(self, player):
         print('Player ' + str(player + 1) + ' collected')
         self.update_player_action_text('Player ' + str(player + 1) + ' collected ' + str(len(self.card_pile)) + ' cards')
         self.hands[player] += self.card_pile
-        self.card_pile = []
         self.hide_pile_card()
+        self.card_pile = []
+        self.slappable = [0]
+        self.update_player_card_count_text(self.player_turn)
+        self.update_pile_card_count_text()
         self.player_challenger = -1
         self.player_turn = player
         self.collected = 1
@@ -115,12 +123,14 @@ class EgyptianRatScrew:
                     valid = 0
                     while valid == 0:
                         self.decision = self.get_input()
+                        if self.decision[0] == 0:
+                            valid = 1
+                            self.collect_pile(self.player_challenger)
                         if self.decision[0] == 1:
                             valid = 1
                             self.slap_pile(self.decision[1])
-                        if self.decision[0] == 0 or self.slappable[0] == 0:
-                            valid = 1
-                            self.collect_pile(self.player_challenger)
+                            if self.slappable[0] == 0:
+                                self.collect_pile(self.player_challenger)
         else:
             self.player_turn = (self.player_turn + 1) % self.players
             self.face_card_challenge()
@@ -130,13 +140,14 @@ class EgyptianRatScrew:
             if self.slappable[0] == 1:
                 self.collect_pile(player)
                 self.check_cards()
-                self.update_player_card_count_text(self.player_turn)
+                self.update_turn_indicator(player)
             else:
                 self.card_pile.append(self.hands[player][0])
                 self.hands[player].pop(0)
                 print(self.hands[player])
                 self.check_cards()
-                self.update_player_card_count_text(self.player_turn)
+                self.update_player_card_count_text(player)
+                self.update_pile_card_count_text()
                 print('Not slappable, Player ' + str(player + 1) + ' burns a card')
                 self.update_player_action_text('Not slappable, Player ' + str(player + 1) + ' burns a card')
         else:
@@ -210,6 +221,7 @@ class EgyptianRatScrew:
         self.slap_button = [None for player in range(self.players)]
         self.slap_text = [None for player in range(self.players)] 
         self.player_card_count = [None for player in range(self.players)]
+        self.pile_card_draw_count = 0
         self.win = GraphWin('Egyptian Rat Screw', GetSystemMetrics(0)-100, GetSystemMetrics(1)-100)
         self.win.setBackground('green')
 
@@ -222,6 +234,10 @@ class EgyptianRatScrew:
         self.turn_indicator.setFill('red')
         self.turn_indicator.setWidth(4)  # width of boundary line
         self.turn_indicator.draw(self.win)
+
+        self.pile_card_count = Text(Point((self.win.getWidth()/2)-100, self.win.getHeight()/2-150), '')
+        self.pile_card_count.setSize(20)
+        self.pile_card_count.draw(self.win)
 
         for player in range(self.players):
             self.show_back_card(player)
@@ -246,10 +262,12 @@ class EgyptianRatScrew:
     def show_pile_card(self):
         self.pile_card.insert(0, Image(Point((self.win.getWidth()/2), self.win.getHeight()/2-150), self.card_pile[0].image_file))
         self.pile_card[0].draw(self.win)
+        self.pile_card_draw_count += 1
 
     def hide_pile_card(self):
-        for cards in range(len(self.card_pile)):
+        for cards in range(self.pile_card_draw_count):
             self.pile_card[cards].undraw()
+        self.pile_card_draw_count = 0
 
     def show_back_card(self, player):
         self.back_card[player] = Image(Point((self.win.getWidth()/(self.players+1)*(player+1)), self.win.getHeight()-250), 'backCard.ppm')
@@ -278,6 +296,12 @@ class EgyptianRatScrew:
         self.turn_indicator.setFill('red')
         self.turn_indicator.setWidth(4)  # width of boundary line
         self.turn_indicator.draw(self.win)
+
+    def update_pile_card_count_text(self):
+        self.pile_card_count.undraw()
+        self.pile_card_count = Text(Point((self.win.getWidth()/2)-100, self.win.getHeight()/2-150), str(len(self.card_pile)))
+        self.pile_card_count.setSize(20)
+        self.pile_card_count.draw(self.win)
 
     def update_player_card_count_text(self, player):
         self.player_card_count[player].undraw()
