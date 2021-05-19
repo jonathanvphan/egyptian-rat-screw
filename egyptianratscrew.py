@@ -45,22 +45,25 @@ class EgyptianRatScrew:
         self.cards_in_play = True
         self.decision = [-1, -1]
         self.slappable = [0]
-        self.collected = 0
+        self.slapped = 0
         count = 0
         while self.sum_players > 1:
             if self.players_in_play[self.player_turn] == True:
                 self.draw_card()
                 self.player_challenger = self.player_turn 
-                if self.collected == 0:
+                if self.slapped == 0:
                     self.player_turn = (self.player_turn + 1) % self.players # <--- issue, increments player after collecting a slap
                 else:
-                    self.collected = 0
+                    self.slapped = 0
                 if len(self.card_pile) > 0:
                     if self.card_pile[0].value in [11, 12, 13, 14]:
                         self.face_card_challenge()
+                        if self.slapped == 1:
+                            self.slapped = 0
                 self.update_turn_indicator(self.player_turn)
             else:
                 self.player_turn = (self.player_turn + 1) % self.players
+                self.update_turn_indicator(self.player_turn)
         print('Player ' + str(self.player_turn+1) + ' wins')
 
     def draw_card(self):
@@ -93,12 +96,10 @@ class EgyptianRatScrew:
         self.hands[player] += self.card_pile
         self.hide_pile_card()
         self.card_pile = []
-        self.slappable = [0]
+        self.player_turn = player
         self.update_player_card_count_text(self.player_turn)
         self.update_pile_card_count_text()
         self.player_challenger = -1
-        self.player_turn = player
-        self.collected = 1
 
     def face_card_challenge(self):
         if self.players_in_play[self.player_turn] == True:
@@ -141,6 +142,7 @@ class EgyptianRatScrew:
                 self.collect_pile(player)
                 self.check_cards()
                 self.update_turn_indicator(player)
+                self.slapped = 1
             else:
                 self.card_pile.append(self.hands[player][0])
                 self.hands[player].pop(0)
@@ -167,7 +169,7 @@ class EgyptianRatScrew:
             if self.card_pile[0].value == self.card_pile[1].value:
                 self.slappable = [1, 'Pair']
             # adds to 10
-            elif (self.card_pile[0].value + self.card_pile[1].value) == 10:
+            elif (self.card_pile[0].value + self.card_pile[1].value) == 10 or (self.card_pile[0] in [9, 14] and self.card_pile[1] in [9, 14]):
                 self.slappable = [1, 'Adds to 10']
             # marriage
             elif self.card_pile[0].value == 13 and self.card_pile[1] == 12:
@@ -180,10 +182,10 @@ class EgyptianRatScrew:
             if self.card_pile[0].value == self.card_pile[2].value:
                 self.slappable = [1, 'Sandwich']
             # ascending straight
-            elif (self.card_pile[0].value + 1) == self.card_pile[1].value and (self.card_pile[1].value + 1) == self.card_pile[2].value:
+            elif ((self.card_pile[0].value + 1) == self.card_pile[1].value and (self.card_pile[1].value + 1) == self.card_pile[2].value) or (self.card_pile[0].value == 14 and self.card_pile[1].value == 2 and self.card_pile[2].value == 3):
                 self.slappable = [1, 'Ascending Straight']
             # descending straight
-            elif (self.card_pile[0].value - 1) == self.card_pile[1].value and (self.card_pile[1].value - 1) == self.card_pile[2].value:
+            elif ((self.card_pile[0].value - 1) == self.card_pile[1].value and (self.card_pile[1].value - 1) == self.card_pile[2].value) or (self.card_pile[0].value == 3 and self.card_pile[1].value == 2 and self.card_pile[2].value == 14):
                 self.slappable = [1, 'Descending Straight']
             # flush
             elif self.card_pile[0].suit == self.card_pile[1].suit and self.card_pile[1].suit == self.card_pile[2].suit:
