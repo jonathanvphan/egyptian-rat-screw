@@ -37,7 +37,6 @@ class EgyptianRatScrew:
         self.hands = [[] for players in range(self.players)]
         for index, cards in enumerate(self._game_deck.cards):
             self.hands[index % self.players].append(cards)
-        print(str(len(self.hands[0])) + ', ' + str(len(self.hands[1])) + ', ' + str(len(self.hands[2])))
     
     def play_round(self):
         self.player_challenger = -1
@@ -80,9 +79,9 @@ class EgyptianRatScrew:
                 self.show_pile_card()
                 self.update_player_card_count_text(self.player_turn)
                 self.update_pile_card_count_text()
+                print('Player ' + str(self.player_turn + 1) + ' played ' + str(self.card_pile[0]))
                 print(self.card_pile)
                 print(str(len(self.hands[0])) + ', ' + str(len(self.hands[1])) + ', ' + str(len(self.hands[2])))
-                print('Player ' + str(self.player_turn + 1))
             elif self.decision[0] == 1 and self.slappable[0] == 1:
                 valid = 1
                 self.slap_pile(self.decision[1])
@@ -92,8 +91,10 @@ class EgyptianRatScrew:
 
     def collect_pile(self, player):
         print('Player ' + str(player + 1) + ' collected')
+        cards = self.card_pile
+        cards.reverse()
         self.update_player_action_text('Player ' + str(player + 1) + ' collected ' + str(len(self.card_pile)) + ' cards')
-        self.hands[player] += self.card_pile
+        self.hands[player] += cards
         self.hide_pile_card()
         self.card_pile = []
         self.player_turn = player
@@ -137,6 +138,7 @@ class EgyptianRatScrew:
             self.face_card_challenge()
 
     def slap_pile(self, player):
+        print('Player ' + str(player + 1) + ' slapped')
         if len(self.card_pile) > 0:
             if self.slappable[0] == 1:
                 self.collect_pile(player)
@@ -146,7 +148,6 @@ class EgyptianRatScrew:
             else:
                 self.card_pile.append(self.hands[player][0])
                 self.hands[player].pop(0)
-                print(self.hands[player])
                 self.check_cards()
                 self.update_player_card_count_text(player)
                 self.update_pile_card_count_text()
@@ -169,7 +170,7 @@ class EgyptianRatScrew:
             if self.card_pile[0].value == self.card_pile[1].value:
                 self.slappable = [1, 'Pair']
             # adds to 10
-            elif (self.card_pile[0].value + self.card_pile[1].value) == 10 or (self.card_pile[0] in [9, 14] and self.card_pile[1] in [9, 14]):
+            elif (self.card_pile[0].value + self.card_pile[1].value) == 10 or (self.card_pile[0].value in [9, 14] and self.card_pile[1].value in [9, 14]):
                 self.slappable = [1, 'Adds to 10']
             # marriage
             elif self.card_pile[0].value == 13 and self.card_pile[1] == 12:
