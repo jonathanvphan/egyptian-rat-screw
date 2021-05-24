@@ -22,6 +22,7 @@ class EgyptianRatScrew:
         self._game_deck.shuffle()
         # deal cards
         self.deal_cards()
+        self.select_rules_graphics()
         # initialize the graphics
         self.initial_graphics()
         self.check_cards()
@@ -49,12 +50,12 @@ class EgyptianRatScrew:
         while self.sum_players > 1:
             if self.players_in_play[self.player_turn] == True:
                 self.draw_card()
-                self.player_challenger = self.player_turn 
+                self.player_challenger = self.player_turn
                 if self.slapped == 0:
-                    self.player_turn = (self.player_turn + 1) % self.players # <--- issue, increments player after collecting a slap
+                    self.player_turn = (self.player_turn + 1) % self.players
                 else:
                     self.slapped = 0
-                if len(self.card_pile) > 0:
+                if len(self.card_pile) > 0 and self.player_challenger != -1:
                     if self.card_pile[0].value in [11, 12, 13, 14]:
                         self.face_card_challenge()
                         if self.slapped == 1:
@@ -81,7 +82,6 @@ class EgyptianRatScrew:
                 self.update_pile_card_count_text()
                 print('Player ' + str(self.player_turn + 1) + ' played ' + str(self.card_pile[0]))
                 print(self.card_pile)
-                print(str(len(self.hands[0])) + ', ' + str(len(self.hands[1])) + ', ' + str(len(self.hands[2])))
             elif self.decision[0] == 1 and self.slappable[0] == 1:
                 valid = 1
                 self.slap_pile(self.decision[1])
@@ -108,7 +108,7 @@ class EgyptianRatScrew:
             turns = self.card_pile[0].value - 10
 
             for tries in range(turns):
-                if self.players_in_play[self.player_turn] == True:
+                if self.players_in_play[self.player_turn] == True and self.player_challenger != -1:
                     self.draw_card()
                     if len(self.card_pile) > 0:
                         if self.card_pile[0].value in [11, 12, 13, 14]:
@@ -160,40 +160,40 @@ class EgyptianRatScrew:
     def check_if_slappable(self):
         self.slappable = [0]
         # 10s
-        if self.card_pile[0].value == 10:
+        if self.card_pile[0].value == 10 and self.selected_rules[0] == 1:
             self.slappable = [1, '10s']
         # queen of hearts
-        elif self.card_pile[0].value == 12 and self.card_pile[0].suit == 'Hearts':
+        elif self.card_pile[0].value == 12 and self.card_pile[0].suit == 'Hearts' and self.selected_rules[1] == 1:
             self.slappable = [1, 'Queen of Hearts']
         if len(self.card_pile) > 1:
             # pair
-            if self.card_pile[0].value == self.card_pile[1].value:
+            if self.card_pile[0].value == self.card_pile[1].value and self.selected_rules[2] == 1:
                 self.slappable = [1, 'Pair']
             # adds to 10
-            elif (self.card_pile[0].value + self.card_pile[1].value) == 10 or (self.card_pile[0].value in [9, 14] and self.card_pile[1].value in [9, 14]):
+            elif ((self.card_pile[0].value + self.card_pile[1].value) == 10 or (self.card_pile[0].value in [9, 14] and self.card_pile[1].value in [9, 14])) and self.selected_rules[3] == 1:
                 self.slappable = [1, 'Adds to 10']
             # marriage
-            elif self.card_pile[0].value == 13 and self.card_pile[1] == 12:
+            elif self.card_pile[0].value == 13 and self.card_pile[1] == 12 and self.selected_rules[4] == 1:
                 self.slappable = [1, 'Marriage']
             # 69
-            elif self.card_pile[0].value == 6 and self.card_pile[1] == 9:
+            elif self.card_pile[0].value == 6 and self.card_pile[1] == 9 and self.selected_rules[5] == 1:
                 self.slappable = [1, '69']
         if len(self.card_pile) > 2:
             # sandwich
-            if self.card_pile[0].value == self.card_pile[2].value:
+            if self.card_pile[0].value == self.card_pile[2].value and self.selected_rules[6] == 1:
                 self.slappable = [1, 'Sandwich']
             # ascending straight
-            elif ((self.card_pile[0].value + 1) == self.card_pile[1].value and (self.card_pile[1].value + 1) == self.card_pile[2].value) or (self.card_pile[0].value == 14 and self.card_pile[1].value == 2 and self.card_pile[2].value == 3):
+            elif (((self.card_pile[0].value + 1) == self.card_pile[1].value and (self.card_pile[1].value + 1) == self.card_pile[2].value) or (self.card_pile[0].value == 14 and self.card_pile[1].value == 2 and self.card_pile[2].value == 3)) and self.selected_rules[7] == 1:
                 self.slappable = [1, 'Ascending Straight']
             # descending straight
-            elif ((self.card_pile[0].value - 1) == self.card_pile[1].value and (self.card_pile[1].value - 1) == self.card_pile[2].value) or (self.card_pile[0].value == 3 and self.card_pile[1].value == 2 and self.card_pile[2].value == 14):
+            elif (((self.card_pile[0].value - 1) == self.card_pile[1].value and (self.card_pile[1].value - 1) == self.card_pile[2].value) or (self.card_pile[0].value == 3 and self.card_pile[1].value == 2 and self.card_pile[2].value == 14)) and self.selected_rules[8] == 1:
                 self.slappable = [1, 'Descending Straight']
             # flush
-            elif self.card_pile[0].suit == self.card_pile[1].suit and self.card_pile[1].suit == self.card_pile[2].suit:
+            elif self.card_pile[0].suit == self.card_pile[1].suit and self.card_pile[1].suit == self.card_pile[2].suit and self.selected_rules[9] == 1:
                 self.slappable = [1, 'Flush']
         if len(self.card_pile) > 3:
             # hoagie
-            if self.card_pile[0].value == self.card_pile[3].value:
+            if self.card_pile[0].value == self.card_pile[3].value and self.selected_rules[10] == 1:
                 self.slappable = [1, 'Hoagie']
 
     def check_cards(self):
@@ -216,6 +216,69 @@ class EgyptianRatScrew:
             card_converted = card
         return card_converted
 
+    def select_rules_graphics(self):
+        self.win = GraphWin('Egyptian Rat Screw', GetSystemMetrics(0)-100, GetSystemMetrics(1)-100)
+        self.win.setBackground('green')
+
+        self.rules_button = [None for buttons in range(12)]
+        self.rules_text = [None for buttons in range(12)]
+        self.selected_rules = [0 for selected in range(11)]
+
+        rules = ['10s', 'Queen of Hearts', 'Pair', 'Adds to 10', 'Marriage (K over Q)', '69', 'Sandwich', 'Asc. Straight', 'Dsc. Straight', 'Flush', 'Hoagie', 'OK']
+
+        i = 0
+        for rows in range(3):
+            for columns in range(4):
+                self.rules_button[i] = Rectangle(Point(((self.win.getWidth()/(4)*(columns))+50), ((self.win.getHeight()/(3)*(rows))+100)), Point(((self.win.getWidth()/(4)*(columns))+250), ((self.win.getHeight()/(3)*(rows))+150)))
+                if i != 12:
+                    self.rules_button[i].setFill('blue')
+                if i == 11:
+                    self.rules_button[i].setFill('red')
+                self.rules_button[i].draw(self.win)
+                self.rules_text[i] = Text(Point(((self.win.getWidth()/(4)*(columns))+150), ((self.win.getHeight()/(3)*(rows))+125)), rules[i])
+                self.rules_text[i].setSize(15)
+                self.rules_text[i].draw(self.win)
+                i += 1
+
+        button_clicked = ''
+        while button_clicked != 'OK':
+            button_clicked = ''
+            input = self.win.getMouse()
+            j = 0
+            for rows in range(3):
+                for columns in range(4):
+                    if input.getX() >= ((self.win.getWidth()/(4)*(columns))+50) and input.getX() <= ((self.win.getWidth()/(4)*(columns))+250):
+                        if input.getY() >= ((self.win.getHeight()/(3)*(rows))+100) and input.getY() <= ((self.win.getHeight()/(3)*(rows))+150):
+                            button_clicked = rules[j]
+                            if button_clicked != 'OK' and self.selected_rules[j] == 0:
+                                self.selected_rules[j] = 1
+                                self.rules_button[j].undraw()
+                                self.rules_button[j] = Rectangle(Point(((self.win.getWidth()/(4)*(columns))+50), ((self.win.getHeight()/(3)*(rows))+100)), Point(((self.win.getWidth()/(4)*(columns))+250), ((self.win.getHeight()/(3)*(rows))+150)))
+                                self.rules_button[j].setFill('red')
+                                self.rules_button[j].draw(self.win)
+                                self.rules_text[j].undraw()
+                                self.rules_text[j] = Text(Point(((self.win.getWidth()/(4)*(columns))+150), ((self.win.getHeight()/(3)*(rows))+125)), rules[j])
+                                self.rules_text[j].setSize(15)
+                                self.rules_text[j].draw(self.win)
+                            elif button_clicked != 'OK' and self.selected_rules[j] == 1:
+                                self.selected_rules[j] = 0
+                                self.rules_button[j].undraw()
+                                self.rules_button[j] = Rectangle(Point(((self.win.getWidth()/(4)*(columns))+50), ((self.win.getHeight()/(3)*(rows))+100)), Point(((self.win.getWidth()/(4)*(columns))+250), ((self.win.getHeight()/(3)*(rows))+150)))
+                                self.rules_button[j].setFill('blue')
+                                self.rules_button[j].draw(self.win)
+                                self.rules_text[j].undraw()
+                                self.rules_text[j] = Text(Point(((self.win.getWidth()/(4)*(columns))+150), ((self.win.getHeight()/(3)*(rows))+125)), rules[j])
+                                self.rules_text[j].setSize(15)
+                                self.rules_text[j].draw(self.win)
+                    j += 1
+
+        k = 0
+        for rows in range(3):
+            for columns in range(4):
+                self.rules_button[k].undraw()
+                self.rules_text[k].undraw()
+                k += 1
+
     def initial_graphics(self):
         self.back_card = [None for player in range(self.players)]
         self.pile_card = []
@@ -225,8 +288,6 @@ class EgyptianRatScrew:
         self.slap_text = [None for player in range(self.players)] 
         self.player_card_count = [None for player in range(self.players)]
         self.pile_card_draw_count = 0
-        self.win = GraphWin('Egyptian Rat Screw', GetSystemMetrics(0)-100, GetSystemMetrics(1)-100)
-        self.win.setBackground('green')
 
         self.player_action_text = Text(Point(1000, self.win.getHeight()-350), '')
         self.player_action_text.setSize(20)
@@ -244,7 +305,7 @@ class EgyptianRatScrew:
 
         for player in range(self.players):
             self.show_back_card(player)
-            self.player_card_count[player] = Text(Point((self.win.getWidth()/(self.players+1)*(player+1))-100, self.win.getHeight()-250), str(len(self.hands[player])))
+            self.player_card_count[player] = Text(Point((self.win.getWidth()/(self.players+1)*(player+1))+150, self.win.getHeight()-275), str(len(self.hands[player])))
             self.player_card_count[player].setSize(20)
             self.player_card_count[player].draw(self.win)
 
@@ -280,18 +341,6 @@ class EgyptianRatScrew:
         self.back_card[player].undraw()
         self.back_card[player].undraw()
 
-    def show_hand_text(self, player):
-        self.hand_text[player] = Text(Point((self.win.getWidth()/(self.players+1)*(player+1)), 30), self.hand_value_string[player])
-        for players in self.winning_player:
-            if (players-1) == player:
-                if self.kicker != '':
-                    self.hand_text[player] = Text(Point((self.win.getWidth()/(self.players+1)*(player+1)), 30), self.hand_value_string[player] + ' with ' + str(self.kicker) + ' kicker')
-                self.hand_text[player].setTextColor('red')
-        self.hand_text[player].draw(self.win)
-
-    def hide_hand_text(self, player):
-        self.hand_text[player].undraw()
-
     def update_turn_indicator(self, player):
         player = player % self.players
         self.turn_indicator.undraw()
@@ -308,7 +357,7 @@ class EgyptianRatScrew:
 
     def update_player_card_count_text(self, player):
         self.player_card_count[player].undraw()
-        self.player_card_count[player] = Text(Point((self.win.getWidth()/(self.players+1)*(player+1))-100, self.win.getHeight()-250), str(len(self.hands[player])))
+        self.player_card_count[player] = Text(Point((self.win.getWidth()/(self.players+1)*(player+1))+150, self.win.getHeight()-275), str(len(self.hands[player])))
         self.player_card_count[player].setSize(20)
         self.player_card_count[player].draw(self.win)
 
@@ -319,8 +368,9 @@ class EgyptianRatScrew:
         self.player_action_text.setTextColor('red')
         self.player_action_text.draw(self.win)
 
-    def get_input(self):
+    def get_input1(self):
         decision = [-1, -1]
+        #decision = [0, 0]
         input = self.win.getMouse()
         for player in range(self.players):
             if input.getX() >= ((self.win.getWidth()/(self.players+1)*(player+1))+100) and input.getX() <= ((self.win.getWidth()/(self.players+1)*(player+1))+200):
@@ -330,24 +380,18 @@ class EgyptianRatScrew:
                     decision = [1, player]
         return decision
 
-    def get_keyboard(self):
-        amount = ''
-        current_key = ''
-        while current_key != 'Return':
-            current_key = self.win.getKey()        
-            if current_key == 'BackSpace':
-                string_list = list(amount)
-                print(string_list)
-                del(string_list[len(string_list)-1])
-                print(string_list)
-                amount = ''.join(string_list)
-                self.update_player_action_text('Bet amount?: $' + amount)
-            elif current_key != 'Return':
-                amount += current_key
-                self.update_player_action_text('Bet amount?: $' + amount)
-        if amount == '':
-            amount = '0'
-        return amount
+    def get_input(self):
+        decision = [-1, -1]
+        #decision = [0, 0]
+        input = self.win.getKey()
+        if input == 'space':
+            decision = [0, 0]
+        elif input == 'Shift_L':
+            decision = [1, 0]
+        elif input == 'Shift_R':
+            decision = [1, 1]
+
+        return decision
 
     def end_game(self):
         winning_player = 0
@@ -363,4 +407,4 @@ class EgyptianRatScrew:
 
 
 game = EgyptianRatScrew()
-game.start_game(3)
+game.start_game(2)
