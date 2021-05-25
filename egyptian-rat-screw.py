@@ -118,11 +118,15 @@ class EgyptianRatScrew:
                 self.slap_pile(self.decision[1])
 
     def collect_pile(self, player):
-        print('Player ' + str(player + 1) + ' collected')
+        if self.slapped == 0:
+            print('Player ' + str(player + 1) + ' collected')
+            self.update_player_action_text('Player ' + str(player + 1) + ' collected ' + str(len(self.card_pile)) + ' cards')
+        elif self.slapped == 1:
+            print('Player ' + str(player + 1) + ' slapped and collected, ' + self.slappable[1])
+            self.update_player_action_text('Player ' + str(player + 1) + ' slapped ' + self.slappable[1] + ' and collected ' + str(len(self.card_pile)) + ' cards' )
         # reverses the cards in the pile to put them into the player's hand in reverse
         cards = self.card_pile
         cards.reverse()
-        self.update_player_action_text('Player ' + str(player + 1) + ' collected ' + str(len(self.card_pile)) + ' cards')
         # add the cards to the player's hand but reversed
         self.hands[player] += cards
         # hide the graphic for the pile card
@@ -202,14 +206,14 @@ class EgyptianRatScrew:
         if len(self.card_pile) > 0:
             # if the pile is slappable
             if self.slappable[0] == 1:
+                # changes the pile to just slapped
+                self.slapped = 1
                 # the player who slapped collects the cards
                 self.collect_pile(player)
                 # checks to see which players are still left in play
                 self.check_cards()
                 # updates the turn indicator
                 self.update_turn_indicator(player)
-                # changes the pile to just slapped
-                self.slapped = 1
             # if the pile is not slappable
             else:
                 # player who slapped burns one card to the pile
@@ -308,13 +312,66 @@ class EgyptianRatScrew:
                 self.rules_text[i].draw(self.win)
                 i += 1
 
+        self.all_rules_button = Rectangle(Point(((self.win.getWidth()/(4)*(3))+50), ((self.win.getHeight()/(3)*(2)))), Point(((self.win.getWidth()/(4)*(3))+250), ((self.win.getHeight()/(3)*(2))+50)))
+        self.all_rules_button.setFill('blue')
+        self.all_rules_button.draw(self.win)
+        self.all_rules_text = Text(Point(((self.win.getWidth()/(4)*(3))+150), ((self.win.getHeight()/(3)*(2))+25)), 'All')
+        self.all_rules_text.setSize(15)
+        self.all_rules_text.draw(self.win)
+
         button_clicked = ''
+        all = 0
         while button_clicked != 'OK':
             button_clicked = ''
             input = self.win.getMouse()
             j = 0
+            if input.getX() >= ((self.win.getWidth()/(4)*(3))+50) and input.getX() <= ((self.win.getWidth()/(4)*(3))+250):
+                if input.getY() >= ((self.win.getHeight()/(3)*(2))) and input.getY() <= ((self.win.getHeight()/(3)*(2))+50):
+                    if all == 0:
+                        button_clicked = 'All'
+                        all = 1
+                        self.all_rules_button.undraw()
+                        self.all_rules_button = Rectangle(Point(((self.win.getWidth()/(4)*(3))+50), ((self.win.getHeight()/(3)*(2)))), Point(((self.win.getWidth()/(4)*(3))+250), ((self.win.getHeight()/(3)*(2))+50)))
+                        self.all_rules_button.setFill('red')
+                        self.all_rules_button.draw(self.win)
+                        self.all_rules_text.undraw()
+                        self.all_rules_text = Text(Point(((self.win.getWidth()/(4)*(3))+150), ((self.win.getHeight()/(3)*(2))+25)), 'None')
+                        self.all_rules_text.setSize(15)
+                        self.all_rules_text.draw(self.win)
+                    elif all == 1:
+                        button_clicked = 'None'
+                        all = 0
+                        self.all_rules_button.undraw()
+                        self.all_rules_button = Rectangle(Point(((self.win.getWidth()/(4)*(3))+50), ((self.win.getHeight()/(3)*(2)))), Point(((self.win.getWidth()/(4)*(3))+250), ((self.win.getHeight()/(3)*(2))+50)))
+                        self.all_rules_button.setFill('blue')
+                        self.all_rules_button.draw(self.win)
+                        self.all_rules_text.undraw()
+                        self.all_rules_text = Text(Point(((self.win.getWidth()/(4)*(3))+150), ((self.win.getHeight()/(3)*(2))+25)), 'All')
+                        self.all_rules_text.setSize(15)
+                        self.all_rules_text.draw(self.win)
+
             for rows in range(3):
                 for columns in range(4):
+                    if button_clicked == 'All' and j != 11:
+                        self.selected_rules[j] = 1
+                        self.rules_button[j].undraw()
+                        self.rules_button[j] = Rectangle(Point(((self.win.getWidth()/(4)*(columns))+50), ((self.win.getHeight()/(3)*(rows))+100)), Point(((self.win.getWidth()/(4)*(columns))+250), ((self.win.getHeight()/(3)*(rows))+150)))
+                        self.rules_button[j].setFill('red')
+                        self.rules_button[j].draw(self.win)
+                        self.rules_text[j].undraw()
+                        self.rules_text[j] = Text(Point(((self.win.getWidth()/(4)*(columns))+150), ((self.win.getHeight()/(3)*(rows))+125)), rules[j])
+                        self.rules_text[j].setSize(15)
+                        self.rules_text[j].draw(self.win)
+                    elif button_clicked == 'None' and j != 11:
+                        self.selected_rules[j] = 0
+                        self.rules_button[j].undraw()
+                        self.rules_button[j] = Rectangle(Point(((self.win.getWidth()/(4)*(columns))+50), ((self.win.getHeight()/(3)*(rows))+100)), Point(((self.win.getWidth()/(4)*(columns))+250), ((self.win.getHeight()/(3)*(rows))+150)))
+                        self.rules_button[j].setFill('blue')
+                        self.rules_button[j].draw(self.win)
+                        self.rules_text[j].undraw()
+                        self.rules_text[j] = Text(Point(((self.win.getWidth()/(4)*(columns))+150), ((self.win.getHeight()/(3)*(rows))+125)), rules[j])
+                        self.rules_text[j].setSize(15)
+                        self.rules_text[j].draw(self.win)
                     if input.getX() >= ((self.win.getWidth()/(4)*(columns))+50) and input.getX() <= ((self.win.getWidth()/(4)*(columns))+250):
                         if input.getY() >= ((self.win.getHeight()/(3)*(rows))+100) and input.getY() <= ((self.win.getHeight()/(3)*(rows))+150):
                             button_clicked = rules[j]
@@ -341,6 +398,8 @@ class EgyptianRatScrew:
                     j += 1
 
         k = 0
+        self.all_rules_button.undraw()
+        self.all_rules_text.undraw()
         for rows in range(3):
             for columns in range(4):
                 self.rules_button[k].undraw()
@@ -357,7 +416,7 @@ class EgyptianRatScrew:
         self.player_card_count = [None for player in range(self.players)]
         self.pile_card_draw_count = 0
 
-        self.player_action_text = Text(Point(1000, self.win.getHeight()-350), '')
+        self.player_action_text = Text(Point(self.win.getWidth()/2, self.win.getHeight()/2-250), '')
         self.player_action_text.setSize(20)
         self.player_action_text.setTextColor('red')
         self.player_action_text.draw(self.win)
@@ -431,7 +490,7 @@ class EgyptianRatScrew:
 
     def update_player_action_text(self, action):
         self.player_action_text.undraw()
-        self.player_action_text = Text(Point(self.win.getWidth()-300, self.win.getHeight()/2), action)
+        self.player_action_text = Text(Point(self.win.getWidth()/2, self.win.getHeight()/2+100), action)
         self.player_action_text.setSize(20)
         self.player_action_text.setTextColor('red')
         self.player_action_text.draw(self.win)
